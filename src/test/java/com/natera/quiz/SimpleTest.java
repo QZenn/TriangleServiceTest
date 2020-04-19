@@ -48,4 +48,30 @@ public class SimpleTest {
 
         System.out.println("Response Body is =>  " + response.asString());
     }
+
+    @Test
+    public void testDeleteTriangle() {
+        JSONObject requestParams = new JSONObject();
+        requestParams.put("input", "3;4;5");
+
+        Response postTriangle = quizRequest()
+                .body(requestParams.toJSONString())
+                .post("/triangle");
+
+        Assert.assertEquals(postTriangle.getStatusCode(), 200);
+
+        String triangleId = postTriangle.jsonPath().get("id");
+
+        Response triangleResponse = quizRequest().get("/triangle/" + triangleId);
+        Assert.assertEquals(triangleResponse.getStatusCode(), 200);
+        System.out.println("Response Body is =>  " + triangleResponse.asString());
+
+        Response deleteResponse = quizRequest().delete("/triangle/" + triangleId);
+        Assert.assertEquals(deleteResponse.statusCode(), 200);
+        System.out.println("Response Body is =>  " + deleteResponse.asString());
+
+        Response check = quizRequest().get("/triangle/" + triangleId);
+        Assert.assertEquals(check.statusCode(), 404);
+        System.out.println("Response Body is =>  " + check.asString());
+    }
 }
