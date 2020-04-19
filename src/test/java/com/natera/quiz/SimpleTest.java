@@ -4,22 +4,34 @@ import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
 import org.json.simple.JSONObject;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 public class SimpleTest {
 
+    String token;
+
+    @BeforeClass
+    public void configure() {
+        RestAssured.baseURI = "https://qa-quiz.natera.com/";
+        token = "4a2cb0d2-058e-43aa-a031-0431dce58095";
+    }
+
+    private RequestSpecification quizRequest() {
+        RequestSpecification request = RestAssured.given()
+                .header("Content-Type", "application/json")
+                .header("X-User", token);
+
+        return request;
+    }
+
     @Test
     public void testTest() {
-        RestAssured.baseURI = "https://qa-quiz.natera.com/";
-
-        RequestSpecification request = RestAssured.given();
+        RequestSpecification request = quizRequest();
 
         JSONObject requestParams = new JSONObject();
         requestParams.put("input", "3;4;5");
-
-        request.header("Content-Type", "application/json");
-        request.header("X-User", "4a2cb0d2-058e-43aa-a031-0431dce58095");
-
         request.body(requestParams.toJSONString());
 
         Response response = request.post("/triangle");
