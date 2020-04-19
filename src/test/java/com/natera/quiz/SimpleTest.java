@@ -38,4 +38,14 @@ public class SimpleTest {
 
         System.out.println("Response Body is =>  " + response.asString());
     }
+
+    @Test
+    public void testGetAllTriangles() {
+        RequestSpecification request = quizRequest();
+        Response response = request.get("/triangle/" + "all");
+
+        Assert.assertEquals(response.statusCode(), 200, "Status code is invalid");
+
+        System.out.println("Response Body is =>  " + response.asString());
+    }
 }
