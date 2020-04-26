@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONObject;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -66,14 +67,15 @@ public class SimpleTest {
         response.then().assertThat()
                 .statusCode(200)
                 .body("id", isUUID.isUUID())
-                .body("firstSide", equalTo("3.0"))
-                .body("secondSide", equalTo("4.0"))
-                .body("thirdSide", equalTo("5.0"));
+                .body("firstSide", equalTo(3.0F))
+                .body("secondSide", equalTo(4.0F))
+                .body("thirdSide", equalTo(5.0F));
 
     }
 
     @Test
     public void getAllTriangles() {
+        createTriangle();
         Response response = request().get("/triangle/" + "all");
         LOGGER.info("All Triangles => " + response.asString());
         Assert.assertEquals(response.statusCode(), 200);
@@ -110,7 +112,7 @@ public class SimpleTest {
 
         Response checkDeletion = request().get("/triangle/" + triangleId);
         LOGGER.info("Check Deletion => " + checkDeletion.asString());
-        checkDeletion.then().assertThat().statusCode(200);
+        checkDeletion.then().assertThat().statusCode(404);
     }
 
     @Test
@@ -128,27 +130,30 @@ public class SimpleTest {
         LOGGER.info("Perimeter => " + perimeter.asString());
         perimeter.then().assertThat()
                 .statusCode(200)
-                .body("result", equalTo("12.0"));
+                .body("result", equalTo(12.0F));
     }
 
     @Test
     public void getArea() {
-        double expectedArea = calcArea(3.0, 4.0, 5.0);
-        Response triangle = request()
-                .body("{ \"input\" : \"3;4;5\"}")
-                .post("/triangle");
-        triangle.then().assertThat().statusCode(200);
-        String triangleId = triangle.jsonPath().get("id");
+        float expectedArea = (float)calcArea(3.0, 4.0, 5.0);
+        String triangleId = createTriangle(";", "3;4;5").jsonPath().get("id");
 
         Response area = request().get("/triangle/" + triangleId + "/area");
         LOGGER.info("Area => " + area.asString());
         area.then().assertThat()
                 .statusCode(200)
-                .body("result", equalTo(Double.toString(expectedArea)));
+                .body("result", equalTo(expectedArea));
     }
 
     @Test
-    public void deleteAllTriangles() {
+    private void deleteAllTriangles() {
+        reachLimit();
+        clean();
+    }
+
+
+    @AfterMethod
+    public void clean() {
         Response getAllTriangles = request().get("/triangle/" + "all");
         LOGGER.info(" Get All Triangles => " + getAllTriangles.asString());
         getAllTriangles.then().assertThat().statusCode(200);
@@ -160,5 +165,38 @@ public class SimpleTest {
             LOGGER.info("Delete => " + response.asString());
             response.then().assertThat().statusCode(200);
         }
+    }
+
+    @Test
+    public void reachLimit() {
+        int attempt = 0;
+        Response response = null;
+        while (attempt < 20) {
+            attempt++;
+            LOGGER.info("Create Triangle => " + attempt);
+            response = createTriangle("1;1;1");
+            if (response.getStatusCode() != 200) {
+                break;
+            }
+        }
+        response.then().assertThat()
+                .statusCode(422)
+        .body("status", equalTo(422))
+        .body("exception", equalTo("com.natera.test.triangle.exception.LimitExceededException"))
+        .body("message", equalTo("Limit exceeded"))
+        .body("timestamp", notNullValue())
+        .body("path", equalTo("/triangle"));
+    }
+
+    private Response createTriangle(String separator, String input) {
+        Response triangle = request()
+                .body("{\"input\" : \"" + input + "\"}")
+                .post("/triangle");
+        LOGGER.info("Create Triangle => " + triangle.asString());
+        return triangle;
+    }
+
+    private Response createTriangle(String input) {
+        return createTriangle(":", input);
     }
 }
