@@ -35,7 +35,7 @@ public class SimpleTest {
     }
 
     @Test
-    public void testTest() {
+    public void createTriangle() {
         RequestSpecification request = quizRequest();
 
         JSONObject requestParams = new JSONObject();
@@ -43,43 +43,41 @@ public class SimpleTest {
         request.body(requestParams.toJSONString());
 
         Response response = request.post("/triangle");
-
-        System.out.println("Response Body is =>  " + response.asString());
+        LOGGER.info(response.asString());
+        Assert.assertEquals(response.getStatusCode(), 200);
     }
 
     @Test
-    public void testGetAllTriangles() {
+    public void getAllTriangles() {
         RequestSpecification request = quizRequest();
         Response response = request.get("/triangle/" + "all");
-
-        Assert.assertEquals(response.statusCode(), 200, "Status code is invalid");
-
-        System.out.println("Response Body is =>  " + response.asString());
+        LOGGER.info("All Triangles => " + response.asString());
+        Assert.assertEquals(response.statusCode(), 200);
     }
 
     @Test
-    public void testDeleteTriangle() {
+    public void deleteTriangle() {
         JSONObject requestParams = new JSONObject();
         requestParams.put("input", "3;4;5");
 
-        Response postTriangle = quizRequest()
+        Response createTriangle = quizRequest()
                 .body(requestParams.toJSONString())
                 .post("/triangle");
+        LOGGER.info("Create Triangle => " + createTriangle.asString());
+        Assert.assertEquals(createTriangle.getStatusCode(), 200);
 
-        Assert.assertEquals(postTriangle.getStatusCode(), 200);
+        String triangleId = createTriangle.jsonPath().get("id");
 
-        String triangleId = postTriangle.jsonPath().get("id");
+        Response getTriangle = quizRequest().get("/triangle/" + triangleId);
+        LOGGER.info("Get Triangle => " + getTriangle.asString());
+        Assert.assertEquals(getTriangle.getStatusCode(), 200);
 
-        Response triangleResponse = quizRequest().get("/triangle/" + triangleId);
-        Assert.assertEquals(triangleResponse.getStatusCode(), 200);
-        System.out.println("Response Body is =>  " + triangleResponse.asString());
+        Response deleteTriangle = quizRequest().delete("/triangle/" + triangleId);
+        LOGGER.info("Delete Triangle = > " + deleteTriangle.asString());
+        Assert.assertEquals(deleteTriangle.statusCode(), 200);
 
-        Response deleteResponse = quizRequest().delete("/triangle/" + triangleId);
-        Assert.assertEquals(deleteResponse.statusCode(), 200);
-        System.out.println("Response Body is =>  " + deleteResponse.asString());
-
-        Response check = quizRequest().get("/triangle/" + triangleId);
-        Assert.assertEquals(check.statusCode(), 404);
-        System.out.println("Response Body is =>  " + check.asString());
+        Response checkDeletion = quizRequest().get("/triangle/" + triangleId);
+        LOGGER.info("Check Deletion => " + checkDeletion.asString());
+        Assert.assertEquals(checkDeletion.statusCode(), 404);
     }
 }
