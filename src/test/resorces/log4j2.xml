@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Properties>
+        <Property name="PID">%5X{pid}</Property>
+        <Property name="LOG_EXCEPTION_CONVERSION_WORD">%xEx</Property>
+        <Property name="LOG_LEVEL_PATTERN">%5p</Property>
+        <Property name="LOG_PATTERN_CONSOLE">%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight{${LOG_LEVEL_PATTERN}} %style{%-20.20c{1.}}{cyan} %style{%15.15M}{magenta} %style{:}{faint} %m%n${sys:LOG_EXCEPTION_CONVERSION_WORD}</Property>
+        <Property name="LOG_PATTERN_FILE">%d{yyyy-MM-dd HH:mm:ss.SSS} ${LOG_LEVEL_PATTERN} %-20.20c{1.} %15.15M : %m%n${sys:LOG_EXCEPTION_CONVERSION_WORD}</Property>
+    </Properties>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT" follow="true">
+            <PatternLayout pattern="${LOG_PATTERN_CONSOLE}" />
+        </Console>
+        <File name="FileSystem" fileName="target/logging.log">
+            <PatternLayout pattern="${LOG_PATTERN_FILE}" />
+        </File>
+    </Appenders>
+    <Loggers>
+        <Logger name="com" level="ALL" additivity="true">
+            <AppenderRef ref="FileSystem" />
+        </Logger>
+        <Root level="ALL">
+            <AppenderRef ref="Console" />
+        </Root>
+    </Loggers>
+</Configuration>
